@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Movie Collection</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #f3f3f3;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            width: 850px;
+            margin: auto;
+            background: white;
+            padding: 35px 30px 25px;
+            border-radius: 7px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 27px;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 18px;
+        }
+
+        h3 {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        .form {
+            display: flex;
+            gap: 12px;
+        }
+
+        input {
+            height: 36px;
+            padding: 8px;
+            border: 1px solid #bbb;
+            font-size: 13px;
+        }
+
+        #title {
+            width: 190px;
+        }
+
+        #genre {
+            width: 190px;
+        }
+
+        #year {
+            width: 130px;
+        }
+
+        button {
+            height: 36px;
+            padding: 5px 14px;
+            border: 1px solid #bbb;
+            background: #eee;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #ddd;
+        }
+
+        #message {
+            margin-top: 12px;
+            min-height: 18px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background: #e9e9e9;
+            text-align: left;
+        }
+
+        th,
+        td {
+            border: 1px solid #d5d5d5;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .load-button {
+            margin-top: 5px;
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>Movie Collection</h1>
+
+    <h2>Add Movie</h2>
+
+    <div class="form">
+
+        <input
+            type="text"
+            id="title"
+            placeholder="Movie title"
+        >
+
+        <input
+            type="text"
+            id="genre"
+            placeholder="Genre"
+        >
+
+        <input
+            type="number"
+            id="year"
+            placeholder="Year"
+        >
+
+        <button type="button" onclick="addMovie()">
+            Add Movie
+        </button>
+
+    </div>
+
+    <div id="message"></div>
+
+
+    <h3>Movies</h3>
+
+    <button
+        type="button"
+        class="load-button"
+        onclick="loadMovies()"
+    >
+        Load Movies
+    </button>
+
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Year</th>
+            </tr>
+        </thead>
+
+        <tbody id="movieList"></tbody>
+
+    </table>
+
+</div>
+
+
+<script>
+
+async function loadMovies() {
+
+    try {
+
+        const response = await fetch("/api/movies");
+
+        if (!response.ok) {
+            throw new Error("Failed to load movies");
+        }
+
+        const movies = await response.json();
+
+        const movieList =
+            document.getElementById("movieList");
+
+        movieList.innerHTML = "";
+
+        movies.forEach(movie => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${movie.id}</td>
+                <td>${movie.title}</td>
+                <td>${movie.genre}</td>
+                <td>${movie.year}</td>
+            `;
+
+            movieList.appendChild(row);
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("message").textContent =
+            "Cannot connect to the server.";
+
+    }
+}
+
+
+async function addMovie() {
+
+    const title =
+        document.getElementById("title").value.trim();
+
+    const genre =
+        document.getElementById("genre").value.trim();
+
+    const year =
+        document.getElementById("year").value;
+
+
+    if (!title || !genre || !year) {
+
+        document.getElementById("message").textContent =
+            "Title, genre, and year are required.";
+
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch("/api/movies", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                title: title,
+                genre: genre,
+                year: Number(year)
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            document.getElementById("message").textContent =
+                data.message;
+
+            return;
+        }
+
+
+        document.getElementById("message").textContent =
+            "Movie added successfully";
+
+
+        document.getElementById("title").value = "";
+        document.getElementById("genre").value = "";
+        document.getElementById("year").value = "";
+
+        loadMovies();
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("message").textContent =
+            "Cannot connect to the server.";
+
+    }
+}
+
+
+loadMovies();
+
+</script>
+
+</body>
+</html>
